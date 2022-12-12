@@ -1,0 +1,79 @@
+"Skins"
+{
+	"category_ct"				"skins_ct" 				// Category ID in the database.
+	"category_ct_display_name" 	"Counter-Terrorists"	// Category display name in shop menu.
+	"category_ct_description"	""						// Category description in shop menu.
+
+	"category_t"				"skins_t" 				// Category ID in the database.
+	"category_t_display_name" 	"Terrorists"			// Category display name in shop menu.
+	"category_t_description"	""						// Category description in shop menu.
+
+    "delay_before_set_spawn" 	"0.1"					// Wait x seconds before set client model.
+	"preview_delay" 			"10"					// Wait x seconds before use preview again.
+
+	"default_model_ct"			"models/player/custom_player/legacy/ctm_fbi_newyear.mdl" 	// default skin for CT
+	"default_model_t"			"models/player/custom_player/legacy/tm_phoenix_newyear.mdl" // default skin for T
+
+	"Gunslinger" // ID in the database
+	{
+		"name"				"Gunslinger"	 // Name of skins
+		"description"		"" 				// Description of skin
+		"model"       		"models/player/custom_player/caleon1/gunslinger/gunslinger_blue.mdl"  		// Path to the model
+		"arms"  			"models/player/custom_player/caleon1/gunslinger/gunslinger_blue_arms.mdl" 	// Path to terrorist arms model
+		"team"				"3"				// 3 == Counter-Terrorists , 2 = Terrorists
+		"flags"				"abd"			// Restrict this skin to regular players, only users with specified flags can use this skin.
+		"price"				"105000"		// Price in credits
+		"sell_price"		"35000"			// The selling price, or -1 to make it non-selling.
+		"gold_price" 		"20"			// Gold item price
+		"gold_sell_price" 	"5" 			// Selling price for gold	
+		"preview"			"1"				// 1 = Enable or 0 = Disabled
+		"hide"				"0"				// Hide the skin in shop menu ? 1 = Enable or 0 = Disabled
+		"luckchance"		"10"			// Item drop chance			
+		"duration"			"2592000"		// Duration of skin use or 0 = forever
+	}
+	
+	"batman_ct"
+	{
+		"name"			"Batman"
+		"description"	""
+		"model"       	"models/player/custom_player/kuristaja/ak/batman/batmanv2.mdl"
+		"arms"  		"models/player/custom_player/kuristaja/ak/batman/batman_arms.mdl"
+		"team"			"3"
+		"price"			"105000"
+		"sell_price"	"35000"	
+		"preview"		"1"
+		"hide"			"0"
+		"luckchance"	"10"
+		"duration"		"1209600"
+	}
+	
+	"reverseflash_t"
+	{
+		"name"			"Reverse Flash"
+		"description"	""
+		"model"       	"models/player/custom_player/kodua/flash52/reverse_flash.mdl"
+		"arms"  		"models/player/custom_player/kodua/flash52/reverse_flash_arms.mdl"
+		"team"			"2"
+		"price"			"105000"
+		"sell_price"	"35000"	
+		"preview"		"1"
+		"hide"			"0"
+		"luckchance"	"10"
+		"duration"		"1209600"
+	}
+		
+	"maverick_t"
+	{
+		"name"			"Maverick"
+		"description"	""
+		"model"       	"models/player/custom_player/hekut/maverick/maverick_hekut.mdl"
+		"arms"  		"models/player/custom_player/hekut/maverick/maverick_hekut_arms.mdl"
+		"team"			"2"
+		"price"			"105000"
+		"sell_price"	"35000"	
+		"preview"		"1"
+		"hide"			"0"
+		"luckchance"	"10"
+		"duration"		"1209600"
+	}
+}
