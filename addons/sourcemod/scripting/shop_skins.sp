@@ -5,10 +5,12 @@
 #include <sdktools>
 #include <sdkhooks>
 #include <shop>
+#include <karyuu>
 
 int g_iPreviewDelay;
 int g_iPreviewEntity[MAXPLAYERS+1];
 int g_iDelay[MAXPLAYERS+1];
+int g_iPreviewGlowColors[4];
 
 char g_sDefaultModelCT[PLATFORM_MAX_PATH];	// default ct model
 char g_sDefaultModelT[PLATFORM_MAX_PATH]; // default t model
@@ -16,8 +18,12 @@ char g_sModelCT[MAXPLAYERS+1][64];
 char g_sModelT[MAXPLAYERS+1][64];
 char g_sCategoryCT[64];
 char g_sCategoryT[64];
+char g_sPreviewRotateSpeed[8];
 
 float g_fDelayBeforeSpawn;
+
+bool g_bPreviewRotateModel;
+bool g_bPreviewGlowModel;
 
 StringMap g_hModels;
 StringMap g_hArmsModels;
@@ -25,10 +31,10 @@ StringMap g_hFlags;
 
 public Plugin myinfo = 
 {
-	name = "Shop - Player Skin Module (gloves(somehow) support)",
-	author = "NiGHT, nuclear silo, AiDN™, azalty",
+	name = "Shop - Player Skin Module (gloves support(somehow))",
+	author = "NiGHT, nuclear silo, AiDN™, azalty, R1ko",
 	description = "",
-	version = "1.0",
+	version = "1.1",
 	url = "github.com/NiGHT757/shop-player-skins"
 }
 
@@ -36,9 +42,9 @@ public void OnPluginStart()
 {
 	HookEvent("player_spawn", Event_PlayerSpawn);
 
-	RegAdminCmd("sm_shop_reloadmodels", cmd_reloadmodels, ADMFLAG_RCON, "Reload 'Shop - Player Skin Module' config");
-
 	if (Shop_IsStarted()) Shop_Started();
+
+	LoadTranslations("shop_skins.phrases");
 }
 
 public void OnPluginEnd()
@@ -52,13 +58,19 @@ Action cmd_reloadmodels(int client, int args)
 	{
 		Shop_UnregisterMe();
 		Shop_Started();
-
-		ReplyToCommand(client, " \x04[Shop]\x01 Config for 'Shop - Player Skin Module' reloaded.");
+		
+		CReplyToCommand(client, "%T", "1", client);
 		return Plugin_Handled;
 	}
 
-	ReplyToCommand(client, " \x04[Shop]\x01 Config for 'Shop - Player Skin Module' \x02failed\x01, try again when the shop is loaded.");
+	CReplyToCommand(client, "%T", "2", client);
 	return Plugin_Handled;
+}
+
+public void OnClientDisconnect(int client)
+{
+	g_sModelCT[client][0] = '\0';
+	g_sModelT[client][0] = '\0';
 }
 
 public void OnMapStart()
@@ -112,22 +124,54 @@ public void Shop_Started()
 	if(!kv.ImportFromFile(_buffer))
 		SetFailState("Config %s doesn't exist", _buffer);
 
-	char sName[64], sDescription[64];
+	char sName[64], sDescription[64], sCommands[256];
 
-	kv.GetString("category_ct", g_sCategoryCT, sizeof(g_sCategoryCT), "skins_ct");
+
+// **************************************** REGISTER COMMANDS **************************************** //
+	kv.GetString("reload_config_commands", sCommands, sizeof(sCommands), "sm_shop_reloadmodels");
+	kv.GetString("reload_config_commands_acces", sName, sizeof(sName), "z");
+	kv.GetString("reload_config_commands_description", sDescription, sizeof(sDescription), "Reload 'Shop - Player Skin Module' config");
+
+	Karyuu_RegMultipleCommand(sCommands, cmd_reloadmodels, sDescription, ReadFlagString(sName));
+// **************************************** REGISTER COMMANDS **************************************** //
+
+// **************************************** REGISTER CATEGORY **************************************** //
+	kv.GetString("category_ct", g_sCategoryCT, sizeof(g_sCategoryCT));
 	kv.GetString("category_ct_display_name", sName, sizeof(sName), "Counter-Terrorists");
 	kv.GetString("category_ct_description", sDescription, sizeof(sDescription), "");
-	CategoryId category_id_ct = Shop_RegisterCategory(g_sCategoryCT, sName, sDescription);
 
-	kv.GetString("category_t", g_sCategoryT, sizeof(g_sCategoryT), "skins_t");
+	CategoryId category_id_ct;
+	if(g_sCategoryCT[0])
+	{
+		category_id_ct = Shop_RegisterCategory(g_sCategoryCT, sName, sDescription);
+	}
+
+	kv.GetString("category_t", g_sCategoryT, sizeof(g_sCategoryT));
 	kv.GetString("category_t_display_name", sName, sizeof(sName), "Terrorists");
 	kv.GetString("category_t_description", sDescription, sizeof(sDescription), "");
-	CategoryId category_id_t = Shop_RegisterCategory(g_sCategoryT, sName, sDescription);
 
-	g_fDelayBeforeSpawn = kv.GetFloat("delay_before_set_spawn");
-	g_iPreviewDelay = kv.GetNum("preview_delay");
+	CategoryId category_id_t;
+	if(g_sCategoryT[0])
+	{
+		category_id_t = Shop_RegisterCategory(g_sCategoryT, sName, sDescription);
+	}
+// **************************************** REGISTER CATEGORY **************************************** //
 
-	// ******************** DEFAULT MODELS ******************** //
+
+// **************************************** LOAD SETTINGS **************************************** //
+	g_fDelayBeforeSpawn 	= kv.GetFloat("delay_before_set_spawn");
+	g_iPreviewDelay 		= kv.GetNum("preview_delay");
+	g_bPreviewGlowModel		= !!kv.GetNum("preview_glow_model", 1);
+	g_bPreviewRotateModel	= !!kv.GetNum("preview_rotate_model", 1);
+
+	kv.GetColor4("preview_glow_color", g_iPreviewGlowColors);
+	kv.GetString("preview_rotate_speed", g_sPreviewRotateSpeed, sizeof(g_sPreviewRotateSpeed), "60");
+
+	//PrintToServer("Settings loaded: g_fDelayBeforeSpawn[%.2f] - g_iPreviewDelay[%d] - g_bPreviewGlowModel[%d] - g_bPreviewRotateModel[%d] - g_iPreviewGlowColors[%d %d %d %d]", g_fDelayBeforeSpawn, g_iPreviewDelay, g_bPreviewGlowModel, g_bPreviewRotateModel, g_iPreviewGlowColors[0], g_iPreviewGlowColors[1], g_iPreviewGlowColors[2], g_iPreviewGlowColors[3]);
+// **************************************** LOAD SETTINGS **************************************** //
+
+
+// **************************************** DEFAULT MODELS **************************************** //
 	kv.GetString("default_model_ct", g_sDefaultModelCT, sizeof(g_sDefaultModelCT));
 	TrimString(g_sDefaultModelCT);
 	if(g_sDefaultModelCT[0])
@@ -151,7 +195,10 @@ public void Shop_Started()
 			g_sDefaultModelT[0] = '\0';
 		}
 	}
-	// ******************** DEFAULT MODELS ******************** //
+// **************************************** DEFAULT MODELS **************************************** //
+
+
+// **************************************** REGISTER ITEMS **************************************** //
 	char sItemName[64], sFlags[8];
 
 	if(kv.GotoFirstSubKey())
@@ -196,33 +243,24 @@ public void Shop_Started()
 			{
 				case 2:
 				{
-					if(Shop_StartItem(category_id_t, sName))
+					if(category_id_t && Shop_StartItem(category_id_t, sName))
 					{
 						Shop_SetInfo(sItemName, sDescription, kv.GetNum("price", 1000), kv.GetNum("sell_price", 500), Item_Togglable, kv.GetNum("duration", 86400), kv.GetNum("gold_price", -1), kv.GetNum("gold_sell_price", -1));
 						Shop_SetLuckChance(kv.GetNum("luckchance", 10));
 						Shop_SetHide(view_as<bool>(kv.GetNum("hide", 0)));
-						if(kv.GetNum("preview"))
-						{
-							Shop_SetCallbacks(_, OnEquipItem, _, _, _, OnPreviewItem);
-						}
-						else
-							Shop_SetCallbacks(_, OnEquipItem);
+
+						Shop_SetCallbacks(INVALID_FUNCTION, OnEquipItem, INVALID_FUNCTION, sFlags[0] ? OnItemDisplay : INVALID_FUNCTION, INVALID_FUNCTION, kv.GetNum("preview") == 1 ? OnPreviewItem : INVALID_FUNCTION, sFlags[0] ? OnItemBuy : INVALID_FUNCTION);
 						Shop_EndItem();
 					}
 				}
 				case 3:
 				{
-					if(Shop_StartItem(category_id_ct, sName))
+					if(category_id_ct && Shop_StartItem(category_id_ct, sName))
 					{
 						Shop_SetInfo(sItemName, sDescription, kv.GetNum("price", 1000), kv.GetNum("sell_price", 500), Item_Togglable, kv.GetNum("duration", 86400), kv.GetNum("gold_price", -1), kv.GetNum("gold_sell_price", -1));
 						Shop_SetLuckChance(kv.GetNum("luckchance", 10));
 						Shop_SetHide(view_as<bool>(kv.GetNum("hide", 0)));
-						if(kv.GetNum("preview"))
-						{
-							Shop_SetCallbacks(_, OnEquipItem, _, _, _, OnPreviewItem, OnItemBuy);
-						}
-						else
-							Shop_SetCallbacks(_, OnEquipItem, _, _, _, _, OnItemBuy);
+						Shop_SetCallbacks(INVALID_FUNCTION, OnEquipItem, INVALID_FUNCTION, sFlags[0] ? OnItemDisplay : INVALID_FUNCTION, INVALID_FUNCTION, kv.GetNum("preview") == 1 ? OnPreviewItem : INVALID_FUNCTION, sFlags[0] ? OnItemBuy : INVALID_FUNCTION);
 						Shop_EndItem();
 					}
 				}
@@ -230,8 +268,22 @@ public void Shop_Started()
 		}
 		while(kv.GotoNextKey());
 	}
+// **************************************** REGISTER ITEMS **************************************** //
 
 	delete kv;
+}
+
+
+bool OnItemDisplay(int client, CategoryId category_id, const char[] category, ItemId item_id, const char[] item, ShopMenu menu, bool &disabled, const char[] name, char[] buffer, int maxlen)
+{
+	int iFlags;
+	g_hFlags.GetValue(item, iFlags);
+	if(iFlags && GetUserFlagBits(client) & iFlags != iFlags)
+	{
+		disabled = true;
+		return true;
+	}
+	return false;
 }
 
 ShopAction OnEquipItem(int client, CategoryId category_id, const char[] category, ItemId item_id, const char[] item, bool isOn, bool elapsed)
@@ -254,7 +306,7 @@ ShopAction OnEquipItem(int client, CategoryId category_id, const char[] category
 	g_hFlags.GetValue(item, iFlags);
 	if(iFlags && GetUserFlagBits(client) & iFlags != iFlags)
 	{
-		PrintToChat(client, " \x04[Shop]\x01 This item is restricted to normal players.");
+		CPrintToChat(client, "%T", "3", client);
 		return Shop_UseOff;
 	}
 
@@ -278,7 +330,7 @@ bool OnItemBuy(int client, CategoryId category_id, const char[] category, ItemId
 	g_hFlags.GetValue(item, iFlags);
 	if(iFlags && GetUserFlagBits(client) & iFlags != iFlags)
 	{
-		PrintToChat(client, " \x04[Shop]\x01 Purchase \x02failed\x01. This item is restricted to normal players.");
+		CPrintToChat(client, "%T", "4", client);
 		return false;
 	}
 	return true;
@@ -293,7 +345,7 @@ void OnPreviewItem(int client, CategoryId category_id, const char[] category, It
 	int iTime = GetTime();
 	if(g_iDelay[client] > iTime)
 	{
-		PrintToChat(client, " \x04[Shop]\x01 Please wait \x02%d\x01 seconds before using the preview again.", g_iDelay[client] - iTime);
+		CPrintToChat(client, "%T", "5", client, g_iDelay[client] - iTime);
 		return;
 	}
 	g_iDelay[client] = iTime + g_iPreviewDelay;
@@ -328,26 +380,32 @@ void OnPreviewItem(int client, CategoryId category_id, const char[] category, It
 	AcceptEntityInput(entity, "AddOutput");
 	AcceptEntityInput(entity, "FireUser1");
 	
-	int offset = GetEntSendPropOffs(entity, "m_clrGlow");
-	SetEntProp(entity, Prop_Send, "m_bShouldGlow", true, true);
-	SetEntProp(entity, Prop_Send, "m_nGlowStyle", 0);
-	SetEntPropFloat(entity, Prop_Send, "m_flGlowMaxDist", 2000.0);
+	int offset;
+	if(g_bPreviewGlowModel && (offset = GetEntSendPropOffs(entity, "m_clrGlow")) != -1)
+	{
+		SetEntProp(entity, Prop_Send, "m_bShouldGlow", true, true);
+		SetEntProp(entity, Prop_Send, "m_nGlowStyle", 0);
+		SetEntPropFloat(entity, Prop_Send, "m_flGlowMaxDist", 2000.0);
 
-	SetEntData(entity, offset, 57, _, true);
-	SetEntData(entity, offset + 1, 197, _, true);
-	SetEntData(entity, offset + 2, 187, _, true);
-	SetEntData(entity, offset + 3, 155, _, true);
+		SetEntData(entity, offset, g_iPreviewGlowColors[0], _, true);
+		SetEntData(entity, offset + 1, g_iPreviewGlowColors[1], _, true);
+		SetEntData(entity, offset + 2, g_iPreviewGlowColors[2], _, true);
+		SetEntData(entity, offset + 3, g_iPreviewGlowColors[3], _, true);
+	}
 
-	int iRotator = CreateEntityByName("func_rotating");
-	DispatchKeyValueVector(iRotator, "origin", fPosition);
+	int iRotator;
+	if(g_bPreviewRotateModel && (iRotator = CreateEntityByName("func_rotating")) != -1)
+	{
+		DispatchKeyValueVector(iRotator, "origin", fPosition);
 
-	DispatchKeyValue(iRotator, "maxspeed", "60");
-	DispatchKeyValue(iRotator, "spawnflags", "64");
-	DispatchSpawn(iRotator);
+		DispatchKeyValue(iRotator, "maxspeed", g_sPreviewRotateSpeed);
+		DispatchKeyValue(iRotator, "spawnflags", "64");
+		DispatchSpawn(iRotator);
 
-	SetVariantString("!activator");
-	AcceptEntityInput(entity, "SetParent", iRotator, iRotator);
-	AcceptEntityInput(iRotator, "Start");
+		SetVariantString("!activator");
+		AcceptEntityInput(entity, "SetParent", iRotator, iRotator);
+		AcceptEntityInput(iRotator, "Start");
+	}
 	g_iPreviewEntity[client] = EntIndexToEntRef(entity);
 
 	SDKHook(entity, SDKHook_SetTransmit, SetTransmitSkin);
