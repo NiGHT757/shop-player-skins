@@ -1,5 +1,9 @@
 "Skins"
 {
+	"reload_config_commands"				"sm_shop_reloadmodels;sm_shop_reloadmodel"
+	"reload_config_commands_acces"			"z"
+	"reload_config_commands_description"	"Reload 'Shop - Player Skin Module' config"
+
 	"category_ct"				"skins_ct" 				// Category ID in the database.
 	"category_ct_display_name" 	"Counter-Terrorists"	// Category display name in shop menu.
 	"category_ct_description"	""						// Category description in shop menu.
@@ -11,8 +15,13 @@
     "delay_before_set_spawn" 	"0.1"					// Wait x seconds before set client model.
 	"preview_delay" 			"10"					// Wait x seconds before use preview again.
 
-	"default_model_ct"			"models/player/custom_player/legacy/ctm_fbi_newyear.mdl" 	// default skin for CT
-	"default_model_t"			"models/player/custom_player/legacy/tm_phoenix_newyear.mdl" // default skin for T
+	"preview_rotate_model"		"1"
+	"preview_rotate_speed"		"60"
+	"preview_glow_model"		"1"
+	"preview_glow_color"		"57 197 187 155"		// RGBA format
+
+	"default_model_ct"			"" 	// default skin for CT
+	"default_model_t"			"" // default skin for T
 
 	"Gunslinger" // ID in the database
 	{
