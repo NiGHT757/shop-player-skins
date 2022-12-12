@@ -1,0 +1,29 @@
+"Phrases"
+{
+	"1"
+	{
+		"en"		" {green}[Shop]{default} Config reloaded."
+		"ro"		" {green}[Shop]{default} Configurația a fost reîncărcată."
+	}
+	"2"
+	{
+		"en"		" {green}[Shop]{default} Try again when the shop is loaded."
+		"ro"		" {green}[Shop]{default} Încercați din nou când magazinul este încărcat."
+	}
+	"3"
+	{
+		"en"		" {green}[Shop]{default} You don't have access to this item."
+		"ro"		" {green}[Shop]{default} Nu aveți acces la acest articol."
+	}
+	"4"
+	{
+		"en"		" {green}[Shop]{default} Purchase {red}failed{default}. This item is restricted for normal players."
+		"ro"		" {green}[Shop]{default} Achiziție {red}eșuată{default}. Acest articol este restricționat pentru jucătorii normali."
+	}
+	"5"
+	{
+		"#format"	"{1:d}"
+		"en"		" {green}[Shop]{default} Please wait {red}{1}{default} seconds before using the preview again."
+		"ro"		" {green}[Shop]{default} Vă rugăm să așteptați {red}{1}{default} secunde înainte de a utiliza din nou previzualizarea."
+	}
+}
