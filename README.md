@@ -1,6 +1,7 @@
 # shop-player-skins
 Allow players to buy and set Server-Side skins on the server.
 
+This plugin will register 2 categories in shop, 1 for Counter-Terrorists and 1 for Terrorists.
 # Features:
 sm_shop_reloadmodels - Reload plugin config. (This command will unregister and re-register all shop items from the config file without restarting the server or plugin.)
 
