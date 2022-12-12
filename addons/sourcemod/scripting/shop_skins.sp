@@ -122,7 +122,7 @@ public void Shop_Started()
 
 	KeyValues kv = new KeyValues("Skins");
 	if(!kv.ImportFromFile(_buffer))
-		SetFailState("Config %s doesn't exist", _buffer);
+		SetFailState("Import from file %s failed", _buffer);
 
 	char sName[64], sDescription[64], sCommands[256];
 
@@ -166,8 +166,6 @@ public void Shop_Started()
 
 	kv.GetColor4("preview_glow_color", g_iPreviewGlowColors);
 	kv.GetString("preview_rotate_speed", g_sPreviewRotateSpeed, sizeof(g_sPreviewRotateSpeed), "60");
-
-	//PrintToServer("Settings loaded: g_fDelayBeforeSpawn[%.2f] - g_iPreviewDelay[%d] - g_bPreviewGlowModel[%d] - g_bPreviewRotateModel[%d] - g_iPreviewGlowColors[%d %d %d %d]", g_fDelayBeforeSpawn, g_iPreviewDelay, g_bPreviewGlowModel, g_bPreviewRotateModel, g_iPreviewGlowColors[0], g_iPreviewGlowColors[1], g_iPreviewGlowColors[2], g_iPreviewGlowColors[3]);
 // **************************************** LOAD SETTINGS **************************************** //
 
 
